@@ -1,9 +1,11 @@
 package ru.scooterrent.crud.services;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.scooterrent.crud.exceptions.NotFoundException;
 import ru.scooterrent.crud.models.Scooter;
 import ru.scooterrent.crud.repositories.ScooterRepository;
 
@@ -26,7 +28,11 @@ public class ScooterService implements ScooterRepository {
 
     @Override
     public Scooter read(Long scooterId) {
-        return jdbcTemplate.queryForObject("SELECT * FROM scooter WHERE scooterid=?", rowMapper, scooterId);
+        try {
+            return jdbcTemplate.queryForObject("SELECT * FROM scooter WHERE scooterid=?", rowMapper, scooterId);
+        } catch (EmptyResultDataAccessException e) {
+            throw new NotFoundException("Scooter with id = [" + scooterId + "] not found", e);
+        }
     }
 
     @Override
@@ -36,11 +42,20 @@ public class ScooterService implements ScooterRepository {
 
     @Override
     public void update(Long scooterId, Scooter scooter) {
-        jdbcTemplate.update("UPDATE scooter SET brandName=?, model=?, maxSpeed=?, isActive=? WHERE scooterid=?", scooter.brandName(), scooter.model(), scooter.maxSpeed(), scooter.isActive(), scooterId);
+        try {
+            jdbcTemplate.update("UPDATE scooter SET brandName=?, model=?, maxSpeed=?, isActive=? WHERE scooterid=?",
+                    scooter.brandName(), scooter.model(), scooter.maxSpeed(), scooter.isActive(), scooterId);
+        } catch (EmptyResultDataAccessException e) {
+            throw new NotFoundException("Scooter with id = [" + scooterId + "] not found", e);
+        }
     }
 
     @Override
     public void delete(Long scooterId) {
-        jdbcTemplate.update("DELETE FROM scooter WHERE scooterid=?", scooterId);
+        try {
+            jdbcTemplate.update("DELETE FROM scooter WHERE scooterid=?", scooterId);
+        } catch (EmptyResultDataAccessException e) {
+            throw new NotFoundException("Scooter with id = [" + scooterId + "] not found", e);
+        }
     }
 }
